@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q. - Creepypasta Scraper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">mime.</h1>
+            <p class="subtitle">Creepypasta Story Scraper</p>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="scraping-controls">
+                <button id="startBtn" class="btn btn-primary">
+                    <span class="btn-icon">🕷️</span>
+                    Start Scraping
+                </button>
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot"></div>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressText">0 / 50 stories</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Dashboard -->
+        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
+            <div class="stat-card">
+                <h3>Total Stories</h3>
+                <div class="stat-number" id="totalStories">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Genres Found</h3>
+                <div class="stat-number" id="totalGenres">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Scraping Time</h3>
+                <div class="stat-number" id="scrapingTime">0s</div>
+            </div>
+        </section>
+
+        <!-- Genre Filter -->
+        <section class="genre-filter" id="genreFilter" style="display: none;">
+            <h3>Filter by Genre</h3>
+            <div class="genre-buttons" id="genreButtons">
+                <!-- Genre buttons will be populated dynamically -->
+            </div>
+        </section>
+
+        <!-- Stories Grid -->
+        <section class="stories-section" id="storiesSection" style="display: none;">
+            <h3>Scraped Stories</h3>
+            <div class="stories-grid" id="storiesGrid">
+                <!-- Story cards will be populated dynamically -->
+            </div>
+        </section>
+
+        <!-- Story Modal -->
+        <div class="modal" id="storyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Story Title</h2>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="story-meta">
+                        <span class="author" id="modalAuthor">Author</span>
+                        <span class="genre" id="modalGenre">Genre</span>
+                        <span class="date" id="modalDate">Date</span>
+                    </div>
+                    <div class="story-tags" id="modalTags"></div>
+                    <div class="story-content" id="modalContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
