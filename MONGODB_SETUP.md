@@ -21,7 +21,7 @@
 1. **Click "Database Access"** in the left sidebar
 2. **Click "Add New Database User"**
 3. **Choose "Password" authentication**
-4. **Username**: Enter `mime_user` (or your preferred username)
+4. **Username**: Enter username
 5. **Password**: Click "Autogenerate Secure Password" and **SAVE THE PASSWORD** (you'll need it!)
 6. **Database User Privileges**: Select "Read and write to any database"
 7. **Click "Add User"**
@@ -50,24 +50,18 @@
 1. **Open the `.env` file** in your project root
 2. **Replace the placeholder** with your actual connection string:
    ```
-   MONGODB_URI=mongodb+srv://<username>:<password>@<your-cluster>.mongodb.net/?retryWrites=true&w=majority
+   MONGODB_URI=
    ```
 3. **Save the file**
 
    **Example format only - use your actual credentials:**
    ```
-   MONGODB_URI=mongodb+srv://myuser:mypassword@cluster0.abc123.mongodb.net/?retryWrites=true&w=majority
+   MONGODB_URI=
    ```
 
 ## Step 7: Test the Connection
 
 Run the migration script to test your connection:
-
-```bash
-cd "/Users/ahnaflabib/Documents/Projects/mime."
-source .venv/bin/activate
-python scripts/migrate_to_mongodb.py
-```
 
 ## Step 8: Verify Data in MongoDB Atlas
 
