@@ -1,4 +1,4 @@
-# Q. - Creepypasta Scraper
+# mime. - Creepypasta Scraper
 
 A modern web application for scraping and browsing creepypasta stories from the Creepypasta Wiki.
 
