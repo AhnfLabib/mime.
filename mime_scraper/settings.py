@@ -67,10 +67,10 @@ DOWNLOADER_MIDDLEWARES = {
 JSON_OUTPUT_DIR = "outputs"
 
 # MongoDB settings (optional). Set MONGODB_ENABLED=True to activate.
-MONGODB_ENABLED = False
-MONGODB_URI = "mongodb://localhost:27017"
+MONGODB_ENABLED = True
+MONGODB_URI = "mongodb://localhost:27017"  # Will be overridden by environment variable
 MONGODB_DATABASE = "mime"
-MONGODB_COLLECTION = "creepypasta"
+MONGODB_COLLECTION = "creepypasta_stories"
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
@@ -82,6 +82,13 @@ ITEM_PIPELINES = {
 # Add MongoDB pipeline only if enabled
 if MONGODB_ENABLED:
     ITEM_PIPELINES["mime_scraper.pipelines.MongoPipeline"] = 400
+
+# LLM cleaning (Gemini) settings
+LLM_CLEANING_ENABLED = True
+
+# Insert LLM cleaning pipeline before Mongo save when enabled
+if LLM_CLEANING_ENABLED:
+    ITEM_PIPELINES["mime_scraper.pipelines.LLMCleaningPipeline"] = 350
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

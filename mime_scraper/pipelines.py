@@ -12,6 +12,8 @@ import os
 from typing import Optional
 
 from pymongo import MongoClient
+from .classifiers import classify_story
+from .llm_cleaner import clean_story_with_gemini
 
 class JsonLinesPipeline:
     def __init__(self, file_path: str):
@@ -40,6 +42,24 @@ class JsonLinesPipeline:
         return item
 
 
+class LLMCleaningPipeline:
+    def __init__(self, enabled: bool):
+        self.enabled = enabled
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(enabled=crawler.settings.getbool("LLM_CLEANING_ENABLED", False))
+
+    def process_item(self, item, _spider):
+        if not self.enabled:
+            return item
+        adapter = ItemAdapter(item)
+        cleaned = clean_story_with_gemini(adapter.asdict())
+        for key, value in cleaned.items():
+            adapter[key] = value
+        return item
+
+
 class MongoPipeline:
     def __init__(self, uri: str, database: str, collection: str):
         self.mongo_uri = uri
@@ -52,9 +72,15 @@ class MongoPipeline:
     def from_crawler(cls, crawler):
         if not crawler.settings.getbool("MONGODB_ENABLED", False):
             return None
-        uri = crawler.settings.get("MONGODB_URI", "mongodb://localhost:27017")
-        database = crawler.settings.get("MONGODB_DATABASE", "mime")
-        collection = crawler.settings.get("MONGODB_COLLECTION", "creepypasta")
+        
+        # Try to get MongoDB URI from environment variable first
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        uri = os.getenv("MONGODB_URI") or crawler.settings.get("MONGODB_URI", "mongodb://localhost:27017")
+        database = os.getenv("MONGODB_DATABASE") or crawler.settings.get("MONGODB_DATABASE", "mime")
+        collection = os.getenv("MONGODB_COLLECTION") or crawler.settings.get("MONGODB_COLLECTION", "creepypasta_stories")
         return cls(uri=uri, database=database, collection=collection)
 
     def open_spider(self, spider):
@@ -69,11 +95,36 @@ class MongoPipeline:
     def process_item(self, item, _spider):
         if not self.collection:
             return item
+        
         adapter = ItemAdapter(item)
+        
+        # Get basic story data
+        title = adapter.get("title", "")
+        content = adapter.get("content", "")
+        tags = adapter.get("tags", [])
+        
+        # Classify story and get enhanced metadata
+        classification = classify_story(title, content, tags)
+        
+        # Add enhanced metadata to item
+        adapter["genre_primary"] = classification["genre_primary"]
+        adapter["genre_secondary"] = classification["genre_secondary"]
+        adapter["tropes"] = classification["tropes"]
+        adapter["writing_style"] = classification["writing_style"]
+        adapter["scraped_at"] = datetime.now(timezone.utc)
+        adapter["updated_at"] = datetime.now(timezone.utc)
+        
+        # Prepare document for MongoDB
+        doc = adapter.asdict()
+        
         # Upsert by URL to avoid duplicates
         self.collection.update_one(
-            {"url": adapter.get("url")},
-            {"$set": adapter.asdict(), "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
+            {"url": doc["url"]},
+            {
+                "$set": doc,
+                "$setOnInsert": {"created_at": datetime.now(timezone.utc)}
+            },
             upsert=True,
         )
+        
         return item

@@ -71,6 +71,41 @@
             </div>
         </section>
 
+        <!-- Generate Story -->
+        <section class="generate-section" id="generateSection" style="margin-top: 24px; display: none;">
+            <h3>Generate New Story</h3>
+            <div class="generate-form">
+                <div class="form-row">
+                    <label for="genGenre">Genre</label>
+                    <select id="genGenre"></select>
+                </div>
+                <div class="form-row">
+                    <label for="genTropes">Tropes (comma-separated)</label>
+                    <input id="genTropes" type="text" placeholder="twist ending, unreliable narrator" />
+                </div>
+                <div class="form-row">
+                    <label for="genWordCount">Target word count</label>
+                    <input id="genWordCount" type="number" min="200" max="5000" value="900" />
+                </div>
+                <div class="form-row">
+                    <label for="genSeeds">Use similar examples</label>
+                    <select id="genSeeds">
+                        <option value="0">None</option>
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <button id="genBtn" class="btn btn-primary">Generate Story</button>
+                </div>
+            </div>
+            <div class="generate-result" id="genResult" style="display:none; margin-top:16px;">
+                <h4>Generated Story</h4>
+                <pre id="genStory" style="white-space: pre-wrap;"></pre>
+            </div>
+        </section>
+
         <!-- Story Modal -->
         <div class="modal" id="storyModal">
             <div class="modal-content">

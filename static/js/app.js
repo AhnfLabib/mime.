@@ -29,6 +29,21 @@ class CreepypastaScraper {
         this.storiesGrid = document.getElementById('storiesGrid');
         this.storyModal = document.getElementById('storyModal');
         this.closeModal = document.getElementById('closeModal');
+
+        // Generate UI
+        this.generateSection = document.getElementById('generateSection');
+        this.genGenre = document.getElementById('genGenre');
+        this.genTropes = document.getElementById('genTropes');
+        this.genWordCount = document.getElementById('genWordCount');
+        this.genSeeds = document.getElementById('genSeeds');
+        this.genBtn = document.getElementById('genBtn');
+        this.genResult = document.getElementById('genResult');
+        this.genStory = document.getElementById('genStory');
+
+        // Always allow generation UI to be visible
+        if (this.generateSection) {
+            this.generateSection.style.display = 'block';
+        }
     }
 
     bindEvents() {
@@ -39,6 +54,10 @@ class CreepypastaScraper {
                 this.closeStoryModal();
             }
         });
+
+        if (this.genBtn) {
+            this.genBtn.addEventListener('click', () => this.generateStory());
+        }
     }
 
     async loadExistingData() {
@@ -170,6 +189,66 @@ class CreepypastaScraper {
             this.statsDashboard.style.display = 'grid';
             this.genreFilter.style.display = 'block';
             this.storiesSection.style.display = 'block';
+            if (this.generateSection) this.generateSection.style.display = 'block';
+            this.populateGenerateGenres();
+        }
+    }
+
+    populateGenerateGenres() {
+        if (!this.genGenre) return;
+        const current = this.genGenre.value;
+        this.genGenre.innerHTML = '';
+        let genres = Object.keys(this.genres);
+        if (genres.length === 0) {
+            genres = ['Psychological', 'Supernatural', 'Sci-Fi', 'Creature', 'Crime', 'Urban Legend'];
+        }
+        genres.forEach((g, idx) => {
+            const opt = document.createElement('option');
+            opt.value = g; opt.textContent = g;
+            if (idx === 0) opt.selected = true;
+            this.genGenre.appendChild(opt);
+        });
+        if (current) this.genGenre.value = current;
+    }
+
+    async generateStory() {
+        try {
+            this.genBtn.disabled = true;
+            this.genBtn.textContent = 'Generating...';
+            this.genResult.style.display = 'none';
+            this.genStory.textContent = '';
+
+            const genre = this.genGenre && this.genGenre.value ? this.genGenre.value : 'Psychological';
+            const tropes = (this.genTropes && this.genTropes.value ? this.genTropes.value : '')
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean);
+            const wordCount = parseInt(this.genWordCount && this.genWordCount.value ? this.genWordCount.value : '900', 10) || 900;
+            const seedTitles = parseInt(this.genSeeds && this.genSeeds.value ? this.genSeeds.value : '2', 10) || 2;
+
+            const resp = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    genre,
+                    tropes,
+                    style: { word_count: wordCount },
+                    seed_titles: seedTitles
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                throw new Error(data.error || 'Generation failed');
+            }
+            this.genStory.textContent = data.story || 'No content generated';
+            this.genResult.style.display = 'block';
+        } catch (e) {
+            this.genStory.textContent = 'Error: ' + e.message;
+            this.genResult.style.display = 'block';
+        } finally {
+            this.genBtn.disabled = false;
+            this.genBtn.textContent = 'Generate Story';
         }
     }
 
@@ -204,7 +283,7 @@ class CreepypastaScraper {
         
         const filteredStories = this.currentGenre === 'all' 
             ? this.stories 
-            : this.stories.filter(story => story.genre === this.currentGenre);
+            : this.stories.filter(story => (story.genre_primary || story.genre) === this.currentGenre);
         
         filteredStories.forEach(story => {
             const storyCard = this.createStoryCard(story);
@@ -222,7 +301,7 @@ class CreepypastaScraper {
         card.innerHTML = `
             <div class="story-title">${story.title || 'Untitled'}</div>
             <div class="story-author">by ${story.author || 'Unknown'}</div>
-            <div class="story-genre">${story.genre || 'Uncategorized'}</div>
+            <div class="story-genre">${(story.genre_primary || story.genre) || 'Uncategorized'}</div>
             <div class="story-preview">${preview}</div>
             <div class="story-tags">
                 ${(story.tags || []).map(tag => `<span class="story-tag">${tag}</span>`).join('')}
@@ -235,7 +314,7 @@ class CreepypastaScraper {
     showStoryModal(story) {
         document.getElementById('modalTitle').textContent = story.title || 'Untitled';
         document.getElementById('modalAuthor').textContent = story.author || 'Unknown';
-        document.getElementById('modalGenre').textContent = story.genre || 'Uncategorized';
+        document.getElementById('modalGenre').textContent = (story.genre_primary || story.genre) || 'Uncategorized';
         document.getElementById('modalDate').textContent = story.publication_date || 'Unknown date';
         document.getElementById('modalContent').textContent = story.content || 'No content available';
         
