@@ -40,10 +40,7 @@
 3. **Choose "Connect your application"**
 4. **Driver**: Select "Python"
 5. **Version**: Select "3.6 or later"
-6. **Copy the connection string** - It looks like:
-   ```
-   mongodb+srv://mime_user:<password>@cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
-   ```
+6. **Copy the connection string**
 
 ## Step 6: Update Your .env File
 
