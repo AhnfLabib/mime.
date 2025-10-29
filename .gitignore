@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Cursor AI Plans - May contain sensitive information
+.cursor/
+
 # Python
 __pycache__/
 *.py[cod]

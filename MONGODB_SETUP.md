@@ -50,9 +50,14 @@
 1. **Open the `.env` file** in your project root
 2. **Replace the placeholder** with your actual connection string:
    ```
-   MONGODB_URI=mongodb+srv://mime_user:YOUR_ACTUAL_PASSWORD@cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<username>:<password>@<your-cluster>.mongodb.net/?retryWrites=true&w=majority
    ```
 3. **Save the file**
+
+   **Example format only - use your actual credentials:**
+   ```
+   MONGODB_URI=mongodb+srv://myuser:mypassword@cluster0.abc123.mongodb.net/?retryWrites=true&w=majority
+   ```
 
 ## Step 7: Test the Connection
 
