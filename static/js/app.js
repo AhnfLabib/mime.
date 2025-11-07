@@ -5,6 +5,7 @@ class CreepypastaScraper {
         this.genres = {};
         this.currentGenre = 'all';
         this.pollInterval = null;
+        this.logPollInterval = null;
         
         this.initializeElements();
         this.bindEvents();
@@ -40,6 +41,11 @@ class CreepypastaScraper {
         this.genResult = document.getElementById('genResult');
         this.genStory = document.getElementById('genStory');
 
+        // Logs UI
+        this.logsContainer = document.getElementById('logsContainer');
+        this.logsContent = document.getElementById('logsContent');
+        this.clearLogsBtn = document.getElementById('clearLogsBtn');
+
         // Always allow generation UI to be visible
         if (this.generateSection) {
             this.generateSection.style.display = 'block';
@@ -57,6 +63,10 @@ class CreepypastaScraper {
 
         if (this.genBtn) {
             this.genBtn.addEventListener('click', () => this.generateStory());
+        }
+        
+        if (this.clearLogsBtn) {
+            this.clearLogsBtn.addEventListener('click', () => this.clearLogs());
         }
     }
 
@@ -105,8 +115,41 @@ class CreepypastaScraper {
 
     showProgress() {
         this.progressContainer.style.display = 'block';
+        this.logsContainer.style.display = 'block';
         this.statusIndicator.querySelector('.status-dot').classList.add('running');
         this.statusText.textContent = 'Scraping...';
+        this.startLogPolling();
+    }
+    
+    clearLogs() {
+        this.logsContent.textContent = '';
+    }
+    
+    startLogPolling() {
+        if (this.logPollInterval) {
+            clearInterval(this.logPollInterval);
+        }
+        
+        this.logPollInterval = setInterval(async () => {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                
+                if (data.logs && data.logs.length > 0) {
+                    this.logsContent.textContent = data.logs.join('\n');
+                    // Auto-scroll to bottom
+                    this.logsContent.scrollTop = this.logsContent.scrollHeight;
+                }
+                
+                // Stop polling if scraping is not running
+                if (!data.is_running && !this.isScraping) {
+                    clearInterval(this.logPollInterval);
+                    this.logPollInterval = null;
+                }
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+            }
+        }, 1000); // Poll every second for real-time updates
     }
 
     startPolling() {
@@ -136,9 +179,27 @@ class CreepypastaScraper {
             clearInterval(this.pollInterval);
             this.pollInterval = null;
         }
+        if (this.logPollInterval) {
+            clearInterval(this.logPollInterval);
+            this.logPollInterval = null;
+        }
         this.isScraping = false;
         this.startBtn.disabled = false;
         this.startBtn.innerHTML = '<span class="btn-icon">🕷️</span> Start Scraping';
+        
+        // Final log fetch
+        setTimeout(async () => {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                if (data.logs && data.logs.length > 0) {
+                    this.logsContent.textContent = data.logs.join('\n');
+                    this.logsContent.scrollTop = this.logsContent.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error fetching final logs:', error);
+            }
+        }, 2000);
     }
 
     updateProgress(status) {

@@ -459,3 +459,79 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* Logs Container */
+.logs-container {
+    margin-top: 20px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.logs-header h4 {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.btn-clear-logs {
+    padding: 6px 12px;
+    background: #333;
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-logs:hover {
+    background: #555;
+    border-color: #777;
+    color: #fff;
+}
+
+.logs-viewer {
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+}
+
+.logs-viewer pre {
+    margin: 0;
+    color: #0f0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.logs-viewer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.logs-viewer::-webkit-scrollbar-track {
+    background: #111;
+}
+
+.logs-viewer::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.logs-viewer::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+

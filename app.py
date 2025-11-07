@@ -67,6 +67,10 @@ scraping_status = {
     'error': None
 }
 
+# Store scraping logs
+scraping_logs = []
+MAX_LOG_LINES = 1000  # Keep last 1000 lines
+
 def classify_genre(tags):
     """Classify story into main genre based on tags"""
     if not tags:
@@ -129,14 +133,42 @@ def run_spider():
             "-L", "INFO"
         ]
         
+        # Clear previous logs
+        scraping_logs.clear()
+        scraping_logs.append(f"[{datetime.now().strftime('%H:%M:%S')}] Starting spider...")
+        
         process = subprocess.Popen(
             cmd,
             cwd=project_dir,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # Combine stderr into stdout
             text=True,
+            bufsize=1,  # Line buffered
             env={**os.environ, "PATH": f"{project_dir}/.venv/bin:{os.environ.get('PATH', '')}"}
         )
+        
+        # Monitor progress and capture logs in real-time
+        def read_output(proc):
+            """Read output from process in real-time"""
+            while True:
+                output = proc.stdout.readline()
+                if output == '' and proc.poll() is not None:
+                    break
+                if output:
+                    line = output.strip()
+                    if line:
+                        timestamp = datetime.now().strftime('%H:%M:%S')
+                        log_entry = f"[{timestamp}] {line}"
+                        scraping_logs.append(log_entry)
+                        # Keep only last MAX_LOG_LINES
+                        if len(scraping_logs) > MAX_LOG_LINES:
+                            scraping_logs.pop(0)
+                        print(log_entry)  # Also print to server console
+        
+        # Start log reader thread
+        log_thread = threading.Thread(target=read_output, args=(process,))
+        log_thread.daemon = True
+        log_thread.start()
         
         # Monitor progress
         while process.poll() is None:
@@ -156,6 +188,21 @@ def run_spider():
                         scraping_status['current_item'] = current_count
                         scraping_status['total_items'] = 50  # Target
                         scraping_status['progress'] = min((current_count / 50) * 100, 100)
+        
+        # Wait for log thread to finish
+        log_thread.join(timeout=5)
+        
+        # Read any remaining output
+        remaining = process.stdout.read()
+        if remaining:
+            for line in remaining.strip().split('\n'):
+                if line.strip():
+                    timestamp = datetime.now().strftime('%H:%M:%S')
+                    scraping_logs.append(f"[{timestamp}] {line.strip()}")
+                    if len(scraping_logs) > MAX_LOG_LINES:
+                        scraping_logs.pop(0)
+        
+        scraping_logs.append(f"[{datetime.now().strftime('%H:%M:%S')}] Spider process completed.")
         
         # Load scraped data
         output_dir = os.path.join(project_dir, "outputs")
@@ -209,6 +256,15 @@ def start_scraping():
 def get_status():
     """Get current scraping status"""
     return jsonify(scraping_status)
+
+@app.route('/api/logs')
+def get_logs():
+    """Get scraping logs"""
+    return jsonify({
+        'logs': scraping_logs,
+        'total_lines': len(scraping_logs),
+        'is_running': scraping_status['is_running']
+    })
 
 @app.route('/api/stories')
 def get_stories():
@@ -416,10 +472,6 @@ def generate_story():
         if genai is None:
             return jsonify({'error': 'google-generativeai not installed'}), 400
 
-        client, db, collection = get_mongodb_connection()
-        if collection is None:
-            return jsonify({'error': 'MongoDB not available'}), 500
-
         body = request.get_json(force=True) or {}
         genre = body.get('genre', 'Uncategorized')
         tropes = body.get('tropes', [])
@@ -427,11 +479,18 @@ def generate_story():
         seed_titles = int(body.get('seed_titles', 0))
 
         seeds = []
+        # Try to get seeds from MongoDB, but don't fail if unavailable
         if seed_titles > 0:
-            q = {"genre_primary": genre}
-            if tropes:
-                q["tropes"] = {"$in": tropes}
-            seeds = list(collection.find(q, {"title": 1, "content": 1}).sort('scraped_at', -1).limit(seed_titles))
+            try:
+                client, db, collection = get_mongodb_connection()
+                if collection is not None:
+                    q = {"genre_primary": genre}
+                    if tropes:
+                        q["tropes"] = {"$in": tropes}
+                    seeds = list(collection.find(q, {"title": 1, "content": 1}).sort('scraped_at', -1).limit(seed_titles))
+            except Exception as mongo_err:
+                print(f"MongoDB unavailable for seeds: {mongo_err}")
+                # Continue without seeds
 
         sys_inst = "You write original creepypasta stories. Do not copy any provided text. Output plain text only."
         constraints = f"Target genre: {genre}. Tropes: {', '.join(tropes)}. Aim style: {style}."
