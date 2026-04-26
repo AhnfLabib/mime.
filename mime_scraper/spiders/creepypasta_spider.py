@@ -8,6 +8,23 @@ from dateutil import parser as dateparser
 from mime_scraper.items import StoryItem
 
 
+DEFAULT_CATEGORY_URLS = [
+    "https://creepypasta.fandom.com/wiki/Category:Suggested_Reading",
+    "https://creepypasta.fandom.com/wiki/Category:PotM",
+    "https://creepypasta.fandom.com/wiki/Category:Spotlighted_Pastas",
+    "https://creepypasta.fandom.com/wiki/Category:Contest_Winner",
+    "https://creepypasta.fandom.com/wiki/Category:User_Stories",
+    "https://creepypasta.fandom.com/wiki/Category:Memes",
+    "https://creepypasta.fandom.com/wiki/Category:Troll_Pasta",
+    "https://creepypasta.fandom.com/wiki/Category:Beings",
+    "https://creepypasta.fandom.com/wiki/Category:Ghosts",
+    "https://creepypasta.fandom.com/wiki/Category:Disappearances",
+    "https://creepypasta.fandom.com/wiki/Category:Computers_and_Internet",
+    "https://creepypasta.fandom.com/wiki/Category:Places",
+    "https://creepypasta.fandom.com/wiki/Category:Weird",
+]
+
+
 class CreepypastaSpider(scrapy.Spider):
     name = "creepypasta"
     allowed_domains = ["fandom.com", "creepypasta.fandom.com"]
@@ -23,10 +40,8 @@ class CreepypastaSpider(scrapy.Spider):
         if start_urls:
             self.start_urls = [u.strip() for u in start_urls.split(",") if u.strip()]
         else:
-            # Default to All Pages to get all stories; user can override
-            self.start_urls = [
-                "https://creepypasta.fandom.com/wiki/Special:AllPages",
-            ]
+            # Default to curated category listing to stay within robots.txt
+            self.start_urls = DEFAULT_CATEGORY_URLS
 
         # Optional: user agent pool used by middleware
         self.user_agent_pool = []
@@ -40,21 +55,34 @@ class CreepypastaSpider(scrapy.Spider):
         return spider
 
     def parse(self, response):
-        # Find links to story pages from All Pages
-        # All Pages uses '.mw-allpages-alphaindex a' for story links
+        if "Category:" in response.url or response.css(".category-page__member-link"):
+            yield from self.parse_category(response)
+        else:
+            yield from self.parse_listing(response)
+
+    def parse_category(self, response):
+        story_links = response.css(".category-page__member-link::attr(href)").getall()
+        for href in story_links:
+            if href and not href.startswith("#"):
+                url = response.urljoin(href)
+                if "Category:" in url or "Special:" in url:
+                    continue
+                yield scrapy.Request(url, callback=self.parse_story, errback=self.on_error)
+
+        next_link = response.css("a.category-page__pagination-next::attr(href)").get()
+        if next_link:
+            yield response.follow(next_link, callback=self.parse_category, errback=self.on_error)
+
+    def parse_listing(self, response):
         story_links = response.css(".mw-allpages-alphaindex a::attr(href)").getall()
-        
-        # Also check for direct story links in the main content
         story_links.extend(response.css("a[href*='/wiki/']:not([href*='Special:']):not([href*='Category:']):not([href*='File:']):not([href*='Template:']):not([href*='Help:']):not([href*='User:']):not([href*='Talk:']):not([href*='Forum:']):not([href*='Message_Wall:']):not([href*='Thread:']):not([href*='Topic:']):not([href*='Board:']):not([href*='Map:']):not([href*='Blog:']):not([href*='Module:']):not([href*='GeoJson:'])::attr(href)").getall())
-        
-        # Process story links
+
         for href in story_links:
             if href and not href.startswith('#'):
                 url = response.urljoin(href)
-                # Skip non-story pages more aggressively
                 skip_patterns = [
-                    'Special:', 'Category:', 'File:', 'Template:', 'Help:', 'User:', 'Talk:', 
-                    'Forum:', 'Message_Wall:', 'Thread:', 'Topic:', 'Board:', 'Map:', 'Blog:', 
+                    'Special:', 'Category:', 'File:', 'Template:', 'Help:', 'User:', 'Talk:',
+                    'Forum:', 'Message_Wall:', 'Thread:', 'Topic:', 'Board:', 'Map:', 'Blog:',
                     'Module:', 'GeoJson:', 'Community_Central', 'Creepypasta_Wiki', 'Main_Page',
                     'List_of_', 'Timeline', 'Gallery', 'Contest', 'Workshop', 'Rules', 'Policy'
                 ]
@@ -62,10 +90,9 @@ class CreepypastaSpider(scrapy.Spider):
                     continue
                 yield scrapy.Request(url, callback=self.parse_story, errback=self.on_error)
 
-        # Handle pagination: look for 'next' link in All Pages
         next_link = response.css("a.mw-nextlink::attr(href)").get()
         if next_link:
-            yield response.follow(next_link, callback=self.parse, errback=self.on_error)
+            yield response.follow(next_link, callback=self.parse_listing, errback=self.on_error)
 
     def parse_story(self, response):
         item = StoryItem()

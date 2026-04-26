@@ -3,138 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q. - Creepypasta Scraper</title>
+    <title>mime. – Story Lab</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1 class="logo">mime.</h1>
-            <p class="subtitle">Creepypasta Story Scraper</p>
+    <div class="page">
+        <header class="hero">
+            <div class="hero-tag">
+                <span class="brand-pill">mime.</span>
+                <span class="brand-copy">story lab + dataset monitor</span>
+            </div>
+            <div class="hero-body">
+                <h1>Keep the corpus clean. Ship new horror fast.</h1>
+                <p>
+                    Monitor scrape health, peek at the genre mix, and spin up a new story in the same view.
+                    The backend handles spiders and cleaning; this surface stays lightweight for planning and ideation.
+                </p>
+            </div>
+            <div class="hero-meta hero-meta--right">
+                <p class="label">Last updated</p>
+                <p id="lastUpdated" class="timestamp">—</p>
+            </div>
         </header>
 
-        <!-- Control Panel -->
-        <section class="control-panel">
-            <div class="scraping-controls">
-                <button id="startBtn" class="btn btn-primary">
-                    <span class="btn-icon">🕷️</span>
-                    Start Scraping
-                </button>
-                <div class="status-indicator" id="statusIndicator">
-                    <div class="status-dot"></div>
-                    <span id="statusText">Ready</span>
-                </div>
-            </div>
-            
-            <div class="progress-container" id="progressContainer" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="progressText">0 / 50 stories</span>
-                    <span id="progressPercent">0%</span>
-                </div>
-            </div>
-            
-            <!-- Scraping Logs -->
-            <div class="logs-container" id="logsContainer" style="display: none;">
-                <div class="logs-header">
-                    <h4>Scraping Logs</h4>
-                    <button class="btn-clear-logs" id="clearLogsBtn">Clear</button>
-                </div>
-                <div class="logs-viewer" id="logsViewer">
-                    <pre id="logsContent">Waiting for logs...</pre>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stats Dashboard -->
-        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
-            <div class="stat-card">
-                <h3>Total Stories</h3>
-                <div class="stat-number" id="totalStories">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Genres Found</h3>
-                <div class="stat-number" id="totalGenres">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Scraping Time</h3>
-                <div class="stat-number" id="scrapingTime">0s</div>
-            </div>
-        </section>
-
-        <!-- Genre Filter -->
-        <section class="genre-filter" id="genreFilter" style="display: none;">
-            <h3>Filter by Genre</h3>
-            <div class="genre-buttons" id="genreButtons">
-                <!-- Genre buttons will be populated dynamically -->
-            </div>
-        </section>
-
-        <!-- Stories Grid -->
-        <section class="stories-section" id="storiesSection" style="display: none;">
-            <h3>Scraped Stories</h3>
-            <div class="stories-grid" id="storiesGrid">
-                <!-- Story cards will be populated dynamically -->
-            </div>
-        </section>
-
-        <!-- Generate Story -->
-        <section class="generate-section" id="generateSection" style="margin-top: 24px; display: none;">
-            <h3>Generate New Story</h3>
-            <div class="generate-form">
-                <div class="form-row">
-                    <label for="genGenre">Genre</label>
-                    <select id="genGenre"></select>
-                </div>
-                <div class="form-row">
-                    <label for="genTropes">Tropes (comma-separated)</label>
-                    <input id="genTropes" type="text" placeholder="twist ending, unreliable narrator" />
-                </div>
-                <div class="form-row">
-                    <label for="genWordCount">Target word count</label>
-                    <input id="genWordCount" type="number" min="200" max="5000" value="900" />
-                </div>
-                <div class="form-row">
-                    <label for="genSeeds">Use similar examples</label>
-                    <select id="genSeeds">
-                        <option value="0">None</option>
-                        <option value="1">1</option>
-                        <option value="2" selected>2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <button id="genBtn" class="btn btn-primary">Generate Story</button>
-                </div>
-            </div>
-            <div class="generate-result" id="genResult" style="display:none; margin-top:16px;">
-                <h4>Generated Story</h4>
-                <pre id="genStory" style="white-space: pre-wrap;"></pre>
-            </div>
-        </section>
-
-        <!-- Story Modal -->
-        <div class="modal" id="storyModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modalTitle">Story Title</h2>
-                    <button class="close-btn" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="story-meta">
-                        <span class="author" id="modalAuthor">Author</span>
-                        <span class="genre" id="modalGenre">Genre</span>
-                        <span class="date" id="modalDate">Date</span>
+        <section class="generator" id="generateSection">
+            <article class="panel panel--wide">
+                <div class="panel-head">
+                    <div>
+                        <p class="label">Story Lab</p>
+                        <h3>Generate New Story</h3>
                     </div>
-                    <div class="story-tags" id="modalTags"></div>
-                    <div class="story-content" id="modalContent"></div>
+                    <p class="helper">
+                        Uses Gemini conditioned on dataset fingerprints.
+                    </p>
                 </div>
-            </div>
-        </div>
+                <div class="grid-form">
+                    <label class="field">
+                        <span>Primary genre</span>
+                        <select id="genGenre"></select>
+                    </label>
+                    <label class="field">
+                        <span>Tropes</span>
+                        <input id="genTropes" type="text" placeholder="lonely narrator, analog horror">
+                    </label>
+                    <label class="field">
+                        <span>Target word count</span>
+                        <input id="genWordCount" type="number" min="200" max="5000" value="900">
+                    </label>
+                    <label class="field">
+                        <span>Seed examples</span>
+                        <select id="genSeeds">
+                            <option value="0">None</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </label>
+                    <label class="field field--stack">
+                        <span>Style notes (optional)</span>
+                        <input id="genStyleNotes" type="text" placeholder="vintage forum tone, slow dread">
+                    </label>
+                    <div class="form-actions">
+                        <button id="genBtn" class="btn-primary">
+                            Generate Story
+                        </button>
+                        <p id="genStatus" class="helper"> </p>
+                    </div>
+                </div>
+            </article>
+            <article class="panel panel--wide" id="genResult" style="display: none;">
+                <div class="panel-head">
+                    <div>
+                        <p class="label">Output</p>
+                        <h3>Generated Story</h3>
+                    </div>
+                    <button id="copyStoryBtn" class="ghost-btn">Copy</button>
+                </div>
+                <div class="story-output" id="genStory">No story yet.</div>
+            </article>
+        </section>
+
+        <section class="metrics" id="statsDashboard">
+            <article class="metric-card">
+                <p class="metric-label">Stories in Atlas</p>
+                <p class="metric-value" id="totalStories">0</p>
+                <p class="metric-footnote">Cleaned + classified</p>
+            </article>
+            <article class="metric-card">
+                <p class="metric-label">Primary Genres</p>
+                <p class="metric-value" id="totalGenres">0</p>
+                <p class="metric-footnote">Active genre buckets</p>
+            </article>
+            <article class="metric-card">
+                <p class="metric-label">Unique Authors</p>
+                <p class="metric-value" id="totalAuthors">0</p>
+                <p class="metric-footnote">Normalized voices</p>
+            </article>
+        </section>
+
+        <section class="insights">
+            <article class="panel">
+                <div class="panel-head">
+                    <div>
+                        <p class="label">Genre Mix</p>
+                        <h3>Top Cohorts</h3>
+                    </div>
+                    <button id="refreshStatsBtn" class="ghost-btn">Refresh</button>
+                </div>
+                <div class="list list--compact" id="genreList">
+                    <p class="empty">No genre data yet.</p>
+                </div>
+            </article>
+            <article class="panel">
+                <div class="panel-head">
+                    <div>
+                        <p class="label">Author Activity</p>
+                        <h3>Most Collected Voices</h3>
+                    </div>
+                </div>
+                <div class="list list--compact" id="authorList">
+                    <p class="empty">No author data yet.</p>
+                </div>
+            </article>
+        </section>
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

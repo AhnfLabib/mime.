@@ -401,6 +401,9 @@ def get_stats():
         
         # Basic stats
         total_stories = collection.count_documents({})
+        total_authors = collection.count_documents({
+            "author": {"$exists": True, "$ne": None, "$ne": "", "$ne": "Unknown"}
+        })
         
         # Genre distribution
         genre_pipeline = [
@@ -430,10 +433,33 @@ def get_stats():
             }}
         ]
         style_stats = list(collection.aggregate(style_pipeline))
+
+        # Author distribution
+        author_pipeline = [
+            {
+                "$match": {
+                    "author": {
+                        "$exists": True,
+                        "$ne": None,
+                        "$ne": "",
+                        "$ne": "Unknown"
+                    }
+                }
+            },
+            {"$group": {"_id": "$author", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        author_stats = list(collection.aggregate(author_pipeline))
         
         return jsonify({
             'total_stories': total_stories,
+            'total_authors': total_authors,
             'genre_distribution': {stat['_id']: stat['count'] for stat in genre_stats},
+            'top_authors': [
+                {'author': stat['_id'], 'count': stat['count']}
+                for stat in author_stats
+            ],
             'trope_distribution': {stat['_id']: stat['count'] for stat in trope_stats},
             'writing_style_stats': style_stats[0] if style_stats else {},
             'last_updated': datetime.now().isoformat()

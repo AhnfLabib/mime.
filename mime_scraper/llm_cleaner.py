@@ -1,6 +1,9 @@
 import os
 import json
-from typing import Dict, Any
+import re
+from typing import Dict, Any, List
+
+from bs4 import BeautifulSoup
 
 MODEL_NAME = os.getenv("GEMINI_MODEL_CLEAN", "gemini-2.5-flash")
 
@@ -24,6 +27,23 @@ SYSTEM_INSTRUCTIONS = (
     "Return ONLY JSON."
 )
 
+
+TAG_SYNONYMS = {
+    "ghost": "supernatural",
+    "ghosts": "supernatural",
+    "spirit": "supernatural",
+    "demon": "supernatural",
+    "demons": "supernatural",
+    "monster": "creature",
+    "monsters": "creature",
+    "ai": "technology",
+    "artificial-intelligence": "technology",
+    "sci-fi": "sci-fi",
+    "science-fiction": "sci-fi",
+    "analog-horror": "analog-horror",
+    "urban-legend": "urban-legend",
+    "ritual": "occult",
+}
 
 _genai = None
 
@@ -55,6 +75,34 @@ def _best_effort_json_parse(text: str) -> Dict[str, Any]:
     return {}
 
 
+def _sanitize_content(content: str) -> str:
+    """Remove HTML artifacts, control chars, and normalize whitespace."""
+    if not content:
+        return ""
+    soup = BeautifulSoup(content, "html.parser")
+    text = soup.get_text(separator="\n")
+    text = text.replace("\u00a0", " ")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = text.strip()
+    return text
+
+
+def _normalize_tags(tags: List[str]) -> List[str]:
+    normalized = []
+    for raw in tags or []:
+        slug = raw.lower().strip()
+        slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
+        if not slug:
+            continue
+        slug = TAG_SYNONYMS.get(slug, slug)
+        if slug not in normalized:
+            normalized.append(slug)
+        if len(normalized) >= 12:
+            break
+    return normalized
+
+
 def clean_story_with_gemini(story: Dict[str, Any]) -> Dict[str, Any]:
     """Clean and normalize a scraped story using Gemini. Returns a dict with cleaned fields.
 
@@ -65,9 +113,9 @@ def clean_story_with_gemini(story: Dict[str, Any]) -> Dict[str, Any]:
             "title": (story.get("title", "") or "").strip().strip('"'),
             "author": story.get("author", "Unknown") or "Unknown",
             "publication_date": story.get("publication_date", "") or "",
-            "tags": story.get("tags", []) or [],
-            "content": story.get("content", "") or "",
-            "clean_notes": "GEMINI_API_KEY not configured; passthrough.",
+            "tags": _normalize_tags(story.get("tags", []) or []),
+            "content": _sanitize_content(story.get("content", "") or ""),
+            "clean_notes": "GEMINI_API_KEY not configured; heuristic cleanup applied.",
         }
 
     title = story.get("title", "")
@@ -102,13 +150,16 @@ def clean_story_with_gemini(story: Dict[str, Any]) -> Dict[str, Any]:
     else:
         notes = cleaned.get("notes", "")
 
+    sanitized_content = _sanitize_content(cleaned.get("content") or content or "")
+    normalized_tags = _normalize_tags(cleaned.get("tags") or tags or [])
+
     return {
         "title": (cleaned.get("title") or title or "").strip().strip('"'),
         "author": cleaned.get("author") or author or "Unknown",
         "publication_date": cleaned.get("publication_date") or date or "",
-        "tags": cleaned.get("tags") or tags or [],
-        "content": cleaned.get("content") or content or "",
-        "clean_notes": notes,
+        "tags": normalized_tags,
+        "content": sanitized_content,
+        "clean_notes": notes or "LLM cleaning applied.",
     }
 
 

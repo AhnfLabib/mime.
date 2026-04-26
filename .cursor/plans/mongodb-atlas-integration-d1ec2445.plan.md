@@ -1,4 +1,49 @@
-<!-- d1ec2445-6e0c-4cb0-a098-9d9a0a1d1d60 c0753563-ea98-42a8-a410-0e42ec146c47 -->
+---
+name: MongoDB Atlas Integration Plan
+overview: ""
+todos:
+  - id: 8bd8fa2b-ae45-4347-bebb-8211928bf39a
+    content: Set up MongoDB Atlas account and cluster (manual step with detailed guide)
+    status: pending
+  - id: bfb1b0a9-02d3-44f2-b45d-5d9aee2c2409
+    content: Install pymongo and dnspython packages
+    status: pending
+  - id: e1be78b2-2973-4afd-a6b9-1901c32f2e3e
+    content: Create .env file with MongoDB connection string
+    status: pending
+  - id: 18e5a349-b426-4109-8e66-8e2b10983295
+    content: Add AI training fields to items.py (genre, tropes, writing_style)
+    status: pending
+  - id: 15303a63-cdc5-46a2-ae50-424675b2c690
+    content: Create classifiers.py with genre and style analysis
+    status: pending
+  - id: 7dc48071-3779-40bf-abb7-2e2a340547e6
+    content: Enhance MongoPipeline with classification and metadata
+    status: pending
+  - id: 338478b6-e610-4a54-b1c9-6ea7202f7fde
+    content: Enable MongoDB in settings.py and add environment variable support
+    status: pending
+  - id: 5941b110-9f54-4d75-8092-09f2f96b2c8c
+    content: Create migration script to import existing JSONL data
+    status: pending
+  - id: d6650a33-24c7-42fc-8992-03747f19263a
+    content: Update Flask app to use MongoDB as primary data source
+    status: pending
+  - id: 08a0c72c-7d58-4a8e-880e-2c279a6db4cf
+    content: Add new API endpoints for AI training data export
+    status: pending
+  - id: 75db2726-94e6-4029-923f-cd572624c654
+    content: Update JavaScript to handle MongoDB data format and new features
+    status: pending
+  - id: f82288e0-e7d0-4676-bc04-dcb89ba005d2
+    content: Execute migration script to import all existing stories
+    status: pending
+  - id: 077efb0e-0515-4af9-961b-32051d78dea7
+    content: Test all endpoints and verify data in MongoDB Atlas
+    status: pending
+isProject: false
+---
+
 # MongoDB Atlas Integration Plan
 
 ## Overview
@@ -11,39 +56,32 @@ Transform the creepypasta scraper to use MongoDB Atlas as the primary data sourc
 
 **You will need to:**
 
-1. Go to https://www.mongodb.com/cloud/atlas/register
+1. Go to [https://www.mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)
 2. Sign up with email or Google account (free tier available)
 3. Create a new cluster:
-
-   - Choose "M0 Sandbox" (Free tier)
-   - Select cloud provider (AWS recommended)
-   - Choose region closest to you
-   - Name your cluster (e.g., "creepypasta-cluster")
-
+  - Choose "M0 Sandbox" (Free tier)
+  - Select cloud provider (AWS recommended)
+  - Choose region closest to you
+  - Name your cluster (e.g., "creepypasta-cluster")
 4. Wait 3-5 minutes for cluster creation
 5. Create database user:
-
-   - Click "Database Access" in left sidebar
-   - Click "Add New Database User"
-   - Choose "Password" authentication
-   - Username: `mime_user` (or your choice)
-   - Generate strong password and SAVE IT
-   - Select "Read and write to any database"
-
+  - Click "Database Access" in left sidebar
+  - Click "Add New Database User"
+  - Choose "Password" authentication
+  - Username: `mime_user` (or your choice)
+  - Generate strong password and SAVE IT
+  - Select "Read and write to any database"
 6. Configure network access:
-
-   - Click "Network Access" in left sidebar
-   - Click "Add IP Address"
-   - Click "Allow Access from Anywhere" (0.0.0.0/0)
-   - Confirm
-
+  - Click "Network Access" in left sidebar
+  - Click "Add IP Address"
+  - Click "Allow Access from Anywhere" (0.0.0.0/0)
+  - Confirm
 7. Get connection string:
-
-   - Click "Database" in left sidebar
-   - Click "Connect" on your cluster
-   - Choose "Connect your application"
-   - Copy the connection string (looks like: `mongodb+srv://username:<password>@cluster.xxxxx.mongodb.net/`)
-   - Replace `<password>` with your actual password
+  - Click "Database" in left sidebar
+  - Click "Connect" on your cluster
+  - Choose "Connect your application"
+  - Copy the connection string (looks like: `mongodb+srv://username:<password>@cluster.xxxxx.mongodb.net/`)
+  - Replace `<password>` with your actual password
 
 ### 1.2 Install MongoDB Python Driver
 
@@ -243,18 +281,3 @@ db.creepypasta_stories.createIndex({ "scraped_at": -1 })
 - ✅ Frontend displays enhanced categorization
 - ✅ Export endpoint ready for AI training data
 
-### To-dos
-
-- [ ] Set up MongoDB Atlas account and cluster (manual step with detailed guide)
-- [ ] Install pymongo and dnspython packages
-- [ ] Create .env file with MongoDB connection string
-- [ ] Add AI training fields to items.py (genre, tropes, writing_style)
-- [ ] Create classifiers.py with genre and style analysis
-- [ ] Enhance MongoPipeline with classification and metadata
-- [ ] Enable MongoDB in settings.py and add environment variable support
-- [ ] Create migration script to import existing JSONL data
-- [ ] Update Flask app to use MongoDB as primary data source
-- [ ] Add new API endpoints for AI training data export
-- [ ] Update JavaScript to handle MongoDB data format and new features
-- [ ] Execute migration script to import all existing stories
-- [ ] Test all endpoints and verify data in MongoDB Atlas
